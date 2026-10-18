@@ -5,6 +5,9 @@ import {TestCaseResult} from "./queries.tsx";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
 
+// Los métodos de tests y de formateo reciben el snippetId (cambio nuestro a la
+// interfaz de la cátedra): sin él no se sabe a qué snippet pertenece un test ni
+// con qué lenguaje y reglas formatear. Ver "Contrato con la UI" en SnippetSearcher.
 export interface SnippetOperations {
   listSnippetDescriptors(page: number,pageSize: number,sippetName?: string): Promise<PaginatedSnippets>
 
@@ -22,17 +25,17 @@ export interface SnippetOperations {
 
   getLintingRules(): Promise<Rule[]>
 
-  getTestCases(): Promise<TestCase[]>
+  getTestCases(snippetId: string): Promise<TestCase[]>
 
-  formatSnippet(snippet: string): Promise<string>
+  formatSnippet(snippetId: string, snippet: string): Promise<string>
 
-  postTestCase(testCase: Partial<TestCase>): Promise<TestCase>
+  postTestCase(snippetId: string, testCase: Partial<TestCase>): Promise<TestCase>
 
-  removeTestCase(id: string): Promise<string>
+  removeTestCase(snippetId: string, id: string): Promise<string>
 
   deleteSnippet(id: string): Promise<string>
 
-  testSnippet(testCase: Partial<TestCase>): Promise<TestCaseResult>
+  testSnippet(snippetId: string, testCase: Partial<TestCase>): Promise<TestCaseResult>
 
   getFileTypes(): Promise<FileType[]>
 
