@@ -5,6 +5,7 @@ import {BugReport, Delete, Save} from "@mui/icons-material";
 import {useTestSnippet} from "../../utils/queries.tsx";
 
 type TabPanelProps = {
+    snippetId: string;
     index: number;
     value: number;
     test?: TestCase;
@@ -12,10 +13,10 @@ type TabPanelProps = {
     removeTestCase?: (testIndex: string) => void;
 }
 
-export const TabPanel = ({value, index, test: initialTest, setTestCase, removeTestCase}: TabPanelProps) => {
+export const TabPanel = ({snippetId, value, index, test: initialTest, setTestCase, removeTestCase}: TabPanelProps) => {
     const [testData, setTestData] = useState<Partial<TestCase> | undefined>(initialTest);
 
-    const {mutateAsync: testSnippet, data} = useTestSnippet();
+    const {mutateAsync: testSnippet, data} = useTestSnippet(snippetId);
 
 
     return (

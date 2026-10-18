@@ -10,6 +10,8 @@ import {Rule} from "../../types/Rule.ts";
 
 const DELAY: number = 1000
 
+// Datos falsos: recibe el snippetId pero no lo usa, todos los tests comparten un
+// mismo lugar.
 export class FakeSnippetOperations implements SnippetOperations {
   private readonly fakeStore = new FakeSnippetStore()
 
@@ -73,7 +75,7 @@ export class FakeSnippetOperations implements SnippetOperations {
     })
   }
 
-  formatSnippet(snippetContent: string): Promise<string> {
+  formatSnippet(_snippetId: string, snippetContent: string): Promise<string> {
     return new Promise(resolve => {
       setTimeout(() => resolve(this.fakeStore.formatSnippet(snippetContent)), DELAY)
     })
@@ -85,13 +87,13 @@ export class FakeSnippetOperations implements SnippetOperations {
     })
   }
 
-  postTestCase(testCase: TestCase): Promise<TestCase> {
+  postTestCase(_snippetId: string, testCase: TestCase): Promise<TestCase> {
     return new Promise(resolve => {
       setTimeout(() => resolve(this.fakeStore.postTestCase(testCase)), DELAY)
     })
   }
 
-  removeTestCase(id: string): Promise<string> {
+  removeTestCase(_snippetId: string, id: string): Promise<string> {
     return new Promise(resolve => {
       setTimeout(() => resolve(this.fakeStore.removeTestCase(id)), DELAY)
     })
