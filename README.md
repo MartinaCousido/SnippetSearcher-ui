@@ -39,6 +39,21 @@ npm run dev
 
 This will start the Vite development server. You can now open your browser and navigate to http://localhost:5173/ to see the application running.
 
+## Conexión con el backend (Snippet Searcher)
+
+La UI le pide todo a `BACKEND_URL`, que por defecto es la dirección de la propia UI más `/api` (`http://localhost:5173/api`). Ahí atiende un **reverse proxy**: recibe cada pedido y se lo pasa al servicio que corresponde, sacando el `/api`.
+
+| Ruta | Va a | Por defecto |
+|---|---|---|
+| `/api/permissions…` | Permission Service | `http://localhost:8081` |
+| el resto de `/api…` | Snippet Service | `http://localhost:8080` |
+
+- En local, el proxy es el de Vite (`server.proxy` en `vite.config.ts`). Funciona solo con `npm run dev`.
+- Para usar otras direcciones, se definen `SNIPPET_SERVICE_URL` y `PERMISSION_SERVICE_URL` en un `.env` (no se commitea).
+- En la VM, el proxy es nginx (ver el README de [SnippetSearcher-infra](https://github.com/MartinaCousido/SnippetSearcher-infra#reverse-proxy)).
+
+El contrato completo está en [Contrato con la UI](https://github.com/MartinaCousido/SnippetSearcher#contrato-con-la-ui) de SnippetSearcher.
+
 ## Build production version
 
 To use this UI in production you should use an optimized and static version, this command will generate this version in `dist` directory:  
