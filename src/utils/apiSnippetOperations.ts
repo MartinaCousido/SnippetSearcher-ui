@@ -28,9 +28,12 @@ export class ApiSnippetOperations implements SnippetOperations {
 
   // --- Snippets (Snippet Service) ---
 
-  // Sin backend todavía: GET /snippets?page=&page_size=&name=
-  listSnippetDescriptors(page: number, pageSize: number, snippetName?: string): Promise<PaginatedSnippets> {
-    return this.fake.listSnippetDescriptors(page, pageSize, snippetName)
+  // GET /snippets?page=&page_size=&name=. Devuelve los propios y los compartidos.
+  async listSnippetDescriptors(page: number, pageSize: number, snippetName?: string): Promise<PaginatedSnippets> {
+    const response = await this.http.get<PaginatedSnippets>('/snippets', {
+      params: {page, page_size: pageSize, name: snippetName || undefined}
+    })
+    return response.data
   }
 
   // POST /snippets. Si el código no es válido, responde 400 con los diagnostics.
