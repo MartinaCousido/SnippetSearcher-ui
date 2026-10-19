@@ -2,7 +2,7 @@ import {useMutation, UseMutationResult, useQuery} from 'react-query';
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet.ts';
 import {SnippetOperations} from "./snippetOperations.ts";
 import {PaginatedUsers} from "./users.ts";
-import {FakeSnippetOperations} from "./mock/fakeSnippetOperations.ts";
+import {ApiSnippetOperations} from "./apiSnippetOperations.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
@@ -21,7 +21,7 @@ export const useSnippetsOperations = () => {
   //         .catch(error => console.error(error));
   // });
 
-  const snippetOperations: SnippetOperations = new FakeSnippetOperations(/* getAccessTokenSilently */); // TODO: Replace with your implementation
+  const snippetOperations: SnippetOperations = new ApiSnippetOperations(/* getAccessTokenSilently */);
 
   return snippetOperations
 }
