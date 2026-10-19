@@ -2,11 +2,13 @@ import {SnippetOperations} from './snippetOperations'
 import {FakeSnippetOperations} from './mock/fakeSnippetOperations'
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet'
 import autoBind from 'auto-bind'
+import axios from 'axios'
 import {PaginatedUsers} from "./users.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {TestCaseResult} from "./queries.tsx";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
+import {BACKEND_URL} from "./constants.ts";
 
 // Nuestra implementación de SnippetOperations: llama a Snippet Service y a
 // Permission Service a través del reverse proxy (BACKEND_URL).
@@ -17,6 +19,8 @@ import {Rule} from "../types/Rule.ts";
 // Cuando un endpoint está listo, su método pasa a llamar al backend.
 export class ApiSnippetOperations implements SnippetOperations {
   private readonly fake: SnippetOperations = new FakeSnippetOperations()
+  // Cliente HTTP hacia el reverse proxy. Con Auth0, acá se va a sumar el token.
+  private readonly http = axios.create({baseURL: BACKEND_URL})
 
   constructor() {
     autoBind(this)
@@ -29,9 +33,10 @@ export class ApiSnippetOperations implements SnippetOperations {
     return this.fake.listSnippetDescriptors(page, pageSize, snippetName)
   }
 
-  // Sin backend todavía: POST /snippets
-  createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
-    return this.fake.createSnippet(createSnippet)
+  // POST /snippets. Si el código no es válido, responde 400 con los diagnostics.
+  async createSnippet(createSnippet: CreateSnippet): Promise<Snippet> {
+    const response = await this.http.post<Snippet>('/snippets', createSnippet)
+    return response.data
   }
 
   // Sin backend todavía: GET /snippets/{id}
@@ -49,9 +54,10 @@ export class ApiSnippetOperations implements SnippetOperations {
     return this.fake.deleteSnippet(id)
   }
 
-  // Sin backend todavía: GET /languages
-  getFileTypes(): Promise<FileType[]> {
-    return this.fake.getFileTypes()
+  // GET /languages
+  async getFileTypes(): Promise<FileType[]> {
+    const response = await this.http.get<FileType[]>('/languages')
+    return response.data
   }
 
   // Sin backend todavía: POST /snippets/{id}/format

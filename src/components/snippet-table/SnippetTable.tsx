@@ -39,7 +39,7 @@ export const SnippetTable = (props: SnippetTableProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const {page, page_size: pageSize, count, handleChangePageSize, handleGoToPage} = usePaginationContext()
   const {createSnackbar} = useSnackbarContext()
-  const {data: fileTypes} = useGetFileTypes();
+  const {data: fileTypes, refetch: refetchFileTypes} = useGetFileTypes();
 
   const handleLoadSnippet = async (target: EventTarget & HTMLInputElement) => {
     const files = target.files
@@ -49,7 +49,10 @@ export const SnippetTable = (props: SnippetTableProps) => {
     }
     const file = files[0]
     const splitName = file.name.split(".")
-    const fileType = getFileLanguage(fileTypes ?? [], splitName.at(-1))
+    // Si el archivo llega antes que la lista de lenguajes (GET /languages), se
+    // espera la lista: si no, cualquier extensión parecería no soportada.
+    const availableFileTypes = fileTypes ?? (await refetchFileTypes()).data ?? []
+    const fileType = getFileLanguage(availableFileTypes, splitName.at(-1))
     if (!fileType) {
       createSnackbar('error', `File type ${splitName.at(-1)} not supported`)
       return
