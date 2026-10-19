@@ -23,8 +23,8 @@ describe('Add snippet tests', () => {
 
   it('Can share a snippet ', () => {
     cy.get('[aria-label="Share"]').click();
-    cy.get('#\\:rl\\:').click();
-    cy.get('#\\:rl\\:-option-0').click();
+    cy.get('#share-user').click();
+    cy.get('#share-user-option-0').click();
     cy.get('.css-1yuhvjn > .MuiBox-root > .MuiButton-contained').click();
     cy.wait(2000)
   })
