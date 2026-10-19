@@ -34,6 +34,8 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
         <Divider/>
         <Box mt={2}>
           <Autocomplete
+              // id fijo: los tests de Cypress buscan el campo por este id.
+              id="share-user"
               renderInput={(params) => <TextField {...params} label="Type the user's name"/>}
               options={data?.users ?? []}
               isOptionEqualToValue={(option, value) =>
