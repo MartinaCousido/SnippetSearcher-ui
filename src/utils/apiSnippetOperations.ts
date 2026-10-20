@@ -42,9 +42,16 @@ export class ApiSnippetOperations implements SnippetOperations {
     return response.data
   }
 
-  // Sin backend todavía: GET /snippets/{id}
-  getSnippetById(id: string): Promise<Snippet | undefined> {
-    return this.fake.getSnippetById(id)
+  // GET /snippets/{id}. Si no existe (404) devuelve undefined, como la
+  // implementación falsa. Sin acceso responde 403 y se propaga el error.
+  async getSnippetById(id: string): Promise<Snippet | undefined> {
+    try {
+      const response = await this.http.get<Snippet>(`/snippets/${id}`)
+      return response.data
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return undefined
+      throw error
+    }
   }
 
   // Sin backend todavía: PUT /snippets/{id}
