@@ -62,6 +62,38 @@ To use this UI in production you should use an optimized and static version, thi
 npm run build
 ```
 
+## Imagen Docker y deploy (Snippet Searcher)
+
+El `Dockerfile` arma la imagen en dos etapas:
+
+1. Compila la UI con Node 20 (`npm ci` y `npm run build`). No baja el programa de Cypress, que la imagen no usa.
+2. Sirve la carpeta `dist/` con nginx, en el puerto 80 ([`nginx.conf`](nginx.conf)). Las rutas de React, como `/snippet/<id>`, responden `index.html`: así recargar la página no da 404.
+
+La imagen se arma sin variables: `BACKEND_URL` queda en `/api`, y la misma imagen sirve en dev y en prod. Para probarla en tu máquina:
+
+```bash
+docker build -t snippet-ui .
+docker run --rm -p 8090:80 snippet-ui   # http://localhost:8090
+```
+
+En la VM, el `proxy` del stack le pasa `/` al servicio `ui` (ver [Reverse proxy](https://github.com/MartinaCousido/SnippetSearcher-infra#reverse-proxy) en el repo de infra).
+
+### Ramas y deploy
+
+Este repo usa `master` en lugar de `dev`:
+
+```
+<rama de la tarea>  ──PR──▶  master  ──PR──▶  main
+                               │               │
+                               ▼               ▼
+                          VM de dev       VM de prod
+```
+
+- Cada tarea va en su propia rama, creada desde `master`, y entra con un PR (squash). Lo probado pasa a `main` con un PR `master` → `main` (merge commit).
+- En cada push a `master` o `main`, `.github/workflows/cd.yml` publica la imagen en GHCR como `ghcr.io/martinacousido/snippet-ui`, con el tag del ambiente (`dev` o `prod`) y el del commit (`sha-…`). Después entra por SSH a la VM y corre `docker service update` solo de `ui`.
+- Usa los secrets `VM_HOST`, `VM_USER` y `VM_SSH_KEY` de los *Environments* `dev` (solo `master`) y `prod` (solo `main`). La VM tiene que estar prendida.
+- `master` y `main` están protegidas igual que en los otros repos: PR obligatorio y el check `build` en verde para mergear.
+
 ## Cypress
 
 To start cypress, make sure that the UI is running and enter: 
