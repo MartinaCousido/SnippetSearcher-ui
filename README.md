@@ -41,7 +41,7 @@ This will start the Vite development server. You can now open your browser and n
 
 ## Conexión con el backend (Snippet Searcher)
 
-La UI le pide todo a `BACKEND_URL`, que por defecto es la dirección de la propia UI más `/api` (`http://localhost:5173/api`). Ahí atiende un **reverse proxy**: recibe cada pedido y se lo pasa al servicio que corresponde, sacando el `/api`.
+La UI le pide todo a `BACKEND_URL`, que por defecto es `/api`, relativa a la página: el navegador le suma la dirección de la UI (`http://localhost:5173/api` en local, `https://snippetsearcher-dev.duckdns.org/api` en dev). Así la misma imagen sirve en dev y en prod. Se puede pisar con la variable `BACKEND_URL` al compilar o al correr Cypress. Ahí atiende un **reverse proxy**: recibe cada pedido y se lo pasa al servicio que corresponde, sacando el `/api`.
 
 | Ruta | Va a | Por defecto |
 |---|---|---|
