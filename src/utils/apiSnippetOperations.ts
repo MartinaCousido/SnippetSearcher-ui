@@ -61,9 +61,11 @@ export class ApiSnippetOperations implements SnippetOperations {
     return response.data
   }
 
-  // Sin backend todavía: DELETE /snippets/{id}
-  deleteSnippet(id: string): Promise<string> {
-    return this.fake.deleteSnippet(id)
+  // DELETE /snippets/{id}. Solo el owner. Devuelve el id, como la
+  // implementación falsa.
+  async deleteSnippet(id: string): Promise<string> {
+    await this.http.delete(`/snippets/${id}`)
+    return id
   }
 
   // GET /languages
