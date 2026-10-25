@@ -54,9 +54,11 @@ export class ApiSnippetOperations implements SnippetOperations {
     }
   }
 
-  // Sin backend todavía: PUT /snippets/{id}
-  updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet> {
-    return this.fake.updateSnippetById(id, updateSnippet)
+  // PUT /snippets/{id}. Solo el owner. Si el código no es válido, responde 400
+  // con los diagnostics y no cambia nada.
+  async updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet> {
+    const response = await this.http.put<Snippet>(`/snippets/${id}`, updateSnippet)
+    return response.data
   }
 
   // Sin backend todavía: DELETE /snippets/{id}
