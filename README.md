@@ -69,12 +69,16 @@ El `Dockerfile` arma la imagen en dos etapas:
 1. Compila la UI con Node 20 (`npm ci` y `npm run build`). No baja el programa de Cypress, que la imagen no usa.
 2. Sirve la carpeta `dist/` con nginx, en el puerto 80 ([`nginx.conf`](nginx.conf)). Las rutas de React, como `/snippet/<id>`, responden `index.html`: así recargar la página no da 404.
 
-La imagen se arma sin variables: `BACKEND_URL` queda en `/api`, y la misma imagen sirve en dev y en prod. Para probarla en tu máquina:
+`BACKEND_URL` queda en `/api`, y la misma imagen sirve en dev y en prod. Las variables de Auth0 llegan como `build-args` (ver [Auth0](#auth0-snippet-searcher)). Para probarla en tu máquina:
 
 ```bash
-docker build -t snippet-ui .
-docker run --rm -p 8090:80 snippet-ui   # http://localhost:8090
+# Pasa las variables VITE_AUTH0_* del .env como build-args.
+docker build -t snippet-ui $(grep '^VITE_' .env | sed 's/^/--build-arg /') .
+# En el puerto 5173: es el único local que acepta el login de Auth0.
+docker run --rm -p 5173:80 snippet-ui   # http://localhost:5173
 ```
+
+En esa prueba, la UI no llega al backend: el proxy de `/api` es el de Vite, que solo existe con `npm run dev`.
 
 En la VM, el `proxy` del stack le pasa `/` al servicio `ui` (ver [Reverse proxy](https://github.com/MartinaCousido/SnippetSearcher-infra#reverse-proxy) en el repo de infra).
 
@@ -102,20 +106,28 @@ To start cypress, make sure that the UI is running and enter:
 npm run cypress
 ```
 
-## Enable Auth0
+## Auth0 (Snippet Searcher)
 
-This application uses https://www.npmjs.com/package/@auth0/auth0-react library for Auth0 integration, to enable it you need to change:
-* Uncomment autologin in [App.tsx](src/App.tsx)
-* Uncomment token retrieval for operations [queries.tsx](src/utils/queries.tsx) 
-* Create a `.env` file with the required env vars:
-```
-VITE_AUTH0_DOMAIN=<domain>
-VITE_AUTH0_CLIENT_ID=<client_id>
-```
+La UI pide iniciar sesión con Auth0 y manda el token del usuario en cada pedido al backend. Las decisiones están en **Auth0** y **Roles y permisos** de [Decisiones técnicas](https://github.com/MartinaCousido/SnippetSearcher#decisiones-técnicas), y los recursos de Auth0 se crean en [SnippetSearcher-infra](https://github.com/MartinaCousido/SnippetSearcher-infra#auth0).
 
-If you get 401 loop when getting token:
-* Change application type in Auth0 to "Regular Web Application"
-* In Application Settings > Credentials > "Authentication Method" select "None" 
+- **Sin sesión**, cualquier página lleva al login de Auth0 (`withAuthenticationRequired` en [`App.tsx`](src/App.tsx)).
+- **El token** es para nuestra API (`audience` = `https://snippetsearcher-api`) y pide `read:snippets write:snippets` ([`main.tsx`](src/main.tsx)). `ApiSnippetOperations` lo agrega a cada pedido como `Authorization: Bearer …`.
+- **La sesión** usa *refresh tokens* guardados en `localStorage`: sobrevive a recargar la página sin depender de cookies de terceros.
+- **Errores:** si el backend responde 403 (falta el permiso, o no es el owner), se muestra "No tenés permiso para hacer esto".
+- **Salir**, en la barra, cierra la sesión y vuelve al login.
+
+Variables (ver [`.env.example`](.env.example)). Ninguna es secreta: el client id de una app SPA es público.
+
+| Variable | Valor |
+|---|---|
+| `VITE_AUTH0_DOMAIN` | `dev-eadjutr73y1lgdc5.us.auth0.com` |
+| `VITE_AUTH0_CLIENT_ID` | El client id de la app `snippetsearcher-ui` |
+| `VITE_AUTH0_AUDIENCE` | `https://snippetsearcher-api` |
+
+- **En local:** `cp .env.example .env` y `npm run dev`.
+- **En la imagen:** Vite las escribe en el código al compilar. Llegan como `build-args` desde `cd.yml` (los `ARG` del `Dockerfile`). Hay un solo tenant, así que la misma imagen sirve en dev y prod.
+
+Para entrar se usan los usuarios de prueba de Pulumi (`ana@example.com`, `leo@example.com`) o un usuario nuevo registrado desde el login, que recibe el rol solo.
 
 ## Start working
 

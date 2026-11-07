@@ -12,8 +12,13 @@ COPY package.json package-lock.json .npmrc ./
 RUN npm ci
 
 COPY . .
-# Sin variables: BACKEND_URL queda en /api, relativa a la página, así que la
-# misma imagen sirve en dev y en prod.
+# Auth0: Vite los escribe en el código al compilar. Llegan como build-args desde
+# cd.yml. No son secretos, y hay un solo tenant para dev y prod.
+ARG VITE_AUTH0_DOMAIN
+ARG VITE_AUTH0_CLIENT_ID
+ARG VITE_AUTH0_AUDIENCE
+# BACKEND_URL queda en /api, relativa a la página, así que la misma imagen
+# sirve en dev y en prod.
 RUN npm run build
 
 # Etapa 2: imagen final, solo con nginx y los archivos compilados.

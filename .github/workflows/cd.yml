@@ -63,6 +63,12 @@ jobs:
         with:
           context: .
           push: true
+          # Auth0 (ver .env.example). No son secretos: el client id de una SPA
+          # es público. Un solo tenant: los mismos valores en dev y prod.
+          build-args: |
+            VITE_AUTH0_DOMAIN=dev-eadjutr73y1lgdc5.us.auth0.com
+            VITE_AUTH0_CLIENT_ID=UOAJy3OakOnU6dtzoUakCbDeP3w1AbSX
+            VITE_AUTH0_AUDIENCE=https://snippetsearcher-api
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           # Reusa las capas de builds anteriores (por ejemplo, el npm ci).
