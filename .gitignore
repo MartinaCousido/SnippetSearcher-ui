@@ -24,5 +24,7 @@ dist-ssr
 *.sw?
 
 .env*
+# La plantilla sí se commitea: no tiene secretos.
+!.env.example
 next-env.d.ts
 .next

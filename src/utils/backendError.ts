@@ -13,6 +13,14 @@ export const backendErrorMessage = (error: unknown): string => {
   if (!axios.isAxiosError(error)) {
     return 'Algo salió mal. Probá de nuevo.'
   }
+  // 401: el backend no aceptó el token (por ejemplo, venció la sesión).
+  if (error.response?.status === 401) {
+    return 'Tu sesión no es válida. Cerrá sesión y volvé a entrar.'
+  }
+  // 403: no tiene el permiso de la operación (su rol) o no es el owner.
+  if (error.response?.status === 403) {
+    return 'No tenés permiso para hacer esto.'
+  }
   const diagnostics: Diagnostic[] | undefined = error.response?.data?.diagnostics
   if (diagnostics?.length) {
     return diagnostics

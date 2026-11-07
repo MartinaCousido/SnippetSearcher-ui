@@ -6,22 +6,14 @@ import {ApiSnippetOperations} from "./apiSnippetOperations.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {FileType} from "../types/FileType.ts";
 import {Rule} from "../types/Rule.ts";
-// import {useAuth0} from "@auth0/auth0-react";
-// import {useEffect} from "react";
+import {useAuth0} from "@auth0/auth0-react";
 
 
 export const useSnippetsOperations = () => {
-  // const {getAccessTokenSilently} = useAuth0()
-  //
-  // useEffect(() => {
-  //     getAccessTokenSilently()
-  //         .then(token => {
-  //             console.log(token)
-  //         })
-  //         .catch(error => console.error(error));
-  // });
+  // Cada pedido al backend lleva el token de Auth0 del usuario.
+  const {getAccessTokenSilently} = useAuth0()
 
-  const snippetOperations: SnippetOperations = new ApiSnippetOperations(/* getAccessTokenSilently */);
+  const snippetOperations: SnippetOperations = new ApiSnippetOperations(getAccessTokenSilently);
 
   return snippetOperations
 }

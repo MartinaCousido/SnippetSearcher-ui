@@ -19,11 +19,18 @@ import {BACKEND_URL} from "./constants.ts";
 // Cuando un endpoint está listo, su método pasa a llamar al backend.
 export class ApiSnippetOperations implements SnippetOperations {
   private readonly fake: SnippetOperations = new FakeSnippetOperations()
-  // Cliente HTTP hacia el reverse proxy. Con Auth0, acá se va a sumar el token.
+  // Cliente HTTP hacia el reverse proxy.
   private readonly http = axios.create({baseURL: BACKEND_URL})
 
-  constructor() {
+  // getAccessToken es getAccessTokenSilently de Auth0: devuelve el token
+  // guardado, o pide uno nuevo con el refresh token si venció.
+  constructor(getAccessToken: () => Promise<string>) {
     autoBind(this)
+    // Interceptor: antes de mandar cada pedido, le agrega el token del usuario.
+    this.http.interceptors.request.use(async config => {
+      config.headers.Authorization = `Bearer ${await getAccessToken()}`
+      return config
+    })
   }
 
   // --- Snippets (Snippet Service) ---
