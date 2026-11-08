@@ -101,9 +101,12 @@ export type TestCaseResult = "success" | "fail"
 
 export const useTestSnippet = (snippetId: string) => {
   const snippetOperations = useSnippetsOperations()
+  const queryClient = useQueryClient()
 
   return useMutation<TestCaseResult, Error, Partial<TestCase>>(
-      (tc) => snippetOperations.testSnippet(snippetId, tc)
+      (tc) => snippetOperations.testSnippet(snippetId, tc),
+      // Vuelve a pedir la lista: así se ve el resultado guardado al lado del test.
+      {onSuccess: () => queryClient.invalidateQueries(['testCases', snippetId])}
   )
 }
 

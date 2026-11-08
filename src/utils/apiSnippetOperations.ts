@@ -132,10 +132,11 @@ export class ApiSnippetOperations implements SnippetOperations {
   }
 
   // POST /snippets/{id}/tests/run: corre el test con el código guardado del
-  // snippet, sin guardarlo. Un error al ejecutar es "fail".
+  // snippet. Un error al ejecutar es "fail". Si el test ya está guardado
+  // (tiene id) y no tiene cambios, el backend guarda el resultado.
   async testSnippet(snippetId: string, testCase: Partial<TestCase>): Promise<TestCaseResult> {
-    const {input, output} = testCase
-    const response = await this.http.post<{ result: TestCaseResult }>(`/snippets/${snippetId}/tests/run`, {input, output})
+    const {id, input, output} = testCase
+    const response = await this.http.post<{ result: TestCaseResult }>(`/snippets/${snippetId}/tests/run`, {id, input, output})
     return response.data.result
   }
 
