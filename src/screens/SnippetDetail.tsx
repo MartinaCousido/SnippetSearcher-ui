@@ -65,11 +65,15 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({onSuccess: () => queryClient.invalidateQueries(['snippet', id])})
   const {createSnackbar} = useSnackbarContext()
 
+  // El editor toma el código guardado solo cuando cambia: si cambia otra cosa
+  // (por ejemplo, llega el resultado del lint), no pisa lo que se está
+  // escribiendo.
+  const savedContent = snippet?.content
   useEffect(() => {
-    if (snippet) {
-      setCode(snippet.content);
+    if (savedContent !== undefined) {
+      setCode(savedContent);
     }
-  }, [snippet]);
+  }, [savedContent]);
 
   useEffect(() => {
     if (formatSnippetData) {
@@ -149,6 +153,21 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
                 />
               </Bòx>
             </Box>
+            {/* Las reglas de lint que incumple (US-6). El lint corre en segundo
+                plano: mientras está pendiente, todavía no hay resultado. */}
+            {snippet?.compliance === "pending" && (
+              <Alert severity="info" sx={{marginTop: 2}}>El lint se está procesando.</Alert>
+            )}
+            {!!snippet?.lintViolations?.length && (
+              <Alert severity="warning" sx={{marginTop: 2}}>
+                <Typography fontWeight="bold">Reglas de lint incumplidas</Typography>
+                {snippet.lintViolations.map(({rule, message, range}, index) => (
+                  <Typography key={index} variant="body2">
+                    {rule} (línea {range.start.line}, columna {range.start.column}): {message}
+                  </Typography>
+                ))}
+              </Alert>
+            )}
             <Box pt={1} flex={1} marginTop={2}>
               <Alert severity="info">Output</Alert>
               <SnippetExecution />

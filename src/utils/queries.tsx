@@ -29,6 +29,9 @@ export const useGetSnippetById = (id: string) => {
 
   return useQuery<Snippet | undefined, Error>(['snippet', id], () => snippetOperations.getSnippetById(id), {
     enabled: !!id, // This query will not execute until the id is provided
+    // El lint corre en segundo plano: mientras está pendiente, se vuelve a
+    // pedir cada 2 segundos para mostrar el resultado cuando llega.
+    refetchInterval: (snippet) => snippet?.compliance === "pending" ? 2000 : false,
   });
 };
 

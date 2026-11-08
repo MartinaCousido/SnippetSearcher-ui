@@ -28,6 +28,15 @@ export type Snippet = CreateSnippet & {
 type SnippetStatus = {
   compliance: ComplianceEnum;
   author: string;
+  // Las reglas de lint que incumple, del último lint (US-6). Lo agrega
+  // Snippet Searcher: la UI original no lo tiene.
+  lintViolations?: LintViolation[];
+}
+
+export type LintViolation = {
+  rule: string;
+  message: string;
+  range: { start: { line: number, column: number }, end: { line: number, column: number } };
 }
 export type PaginatedSnippets = Pagination & {
   snippets: Snippet[]
