@@ -100,11 +100,29 @@ Este repo usa `master` en lugar de `dev`:
 
 ## Cypress
 
-To start cypress, make sure that the UI is running and enter: 
+Los tests de la cátedra (`cypress/e2e/`) usan la página como lo haría un usuario. Inician sesión en la página real de Auth0, con un usuario de prueba, y corren contra el sistema levantado en local.
 
-```bash
-npm run cypress
-```
+1. **Backend:** levantar el sistema completo desde SnippetSearcher (`docker compose -f docker-compose.sistema.yml up --build`, ver [Cómo levantarlo](https://github.com/MartinaCousido/SnippetSearcher#cómo-levantarlo)).
+2. **Variables:** en el `.env` de este repo (ver [`.env.example`](.env.example)), además de las de Auth0:
+
+   | Variable | Valor |
+   |---|---|
+   | `AUTH0_USERNAME` | `ana@example.com`: usuario de prueba con el rol `snippet-user` |
+   | `AUTH0_PASSWORD` | La de `USUARIOS_PASSWORD` en `SnippetSearcher-infra/auth0/.env` |
+
+3. **UI:** `npm run dev`.
+4. **Tests:** `npm run cypress` (con ventana) o `npx cypress run` (en la terminal).
+
+Cómo funciona el login:
+
+- `cy.loginToAuth0` ([`cypress/support/e2e.ts`](cypress/support/e2e.ts)) entra por la página de Auth0 una sola vez y guarda la sesión con `cy.session`. Los tests siguientes la reusan.
+- La sesión es válida si `auth0-react` tiene su token en `localStorage` (claves `@@auth0spajs@@…`).
+- Los pedidos que un test hace directo al backend con `cy.request` llevan el token con `cy.authHeaders()`.
+- La primera vez que un usuario entra desde `localhost`, Auth0 pide autorizar la app. Si Cypress se queda en esa pantalla, hay que entrar una vez a mano con ese usuario y aceptar.
+
+"Can run snippets" falla hasta la US-10 (ejecución interactiva): el botón para ejecutar está comentado en la UI de la cátedra (`src/screens/SnippetDetail.tsx`).
+
+Los tests dejan snippets creados en la base de `ana`. "Renders the first snippets" espera menos de 10 en la primera página: si se acumulan, hay que borrar algunos.
 
 ## Auth0 (Snippet Searcher)
 
