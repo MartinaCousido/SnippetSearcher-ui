@@ -110,24 +110,33 @@ export class ApiSnippetOperations implements SnippetOperations {
 
   // --- Tests (Snippet Service) ---
 
-  // Sin backend todavía: GET /snippets/{id}/tests
-  getTestCases(snippetId: string): Promise<TestCase[]> {
-    return this.fake.getTestCases(snippetId)
+  // GET /snippets/{id}/tests: los tests del snippet, cada uno con el
+  // resultado de su última corrida automática (lastResult).
+  async getTestCases(snippetId: string): Promise<TestCase[]> {
+    const response = await this.http.get<TestCase[]>(`/snippets/${snippetId}/tests`)
+    return response.data
   }
 
-  // Sin backend todavía: POST /snippets/{id}/tests
-  postTestCase(snippetId: string, testCase: Partial<TestCase>): Promise<TestCase> {
-    return this.fake.postTestCase(snippetId, testCase)
+  // POST /snippets/{id}/tests: sin id crea el test; con id, lo cambia. Solo
+  // el owner.
+  async postTestCase(snippetId: string, testCase: Partial<TestCase>): Promise<TestCase> {
+    const {id, name, input, output} = testCase
+    const response = await this.http.post<TestCase>(`/snippets/${snippetId}/tests`, {id, name, input, output})
+    return response.data
   }
 
-  // Sin backend todavía: DELETE /snippets/{id}/tests/{testId}
-  removeTestCase(snippetId: string, id: string): Promise<string> {
-    return this.fake.removeTestCase(snippetId, id)
+  // DELETE /snippets/{id}/tests/{testId}. Solo el owner.
+  async removeTestCase(snippetId: string, id: string): Promise<string> {
+    await this.http.delete(`/snippets/${snippetId}/tests/${id}`)
+    return id
   }
 
-  // Sin backend todavía: POST /snippets/{id}/tests/run
-  testSnippet(snippetId: string, testCase: Partial<TestCase>): Promise<TestCaseResult> {
-    return this.fake.testSnippet(snippetId, testCase)
+  // POST /snippets/{id}/tests/run: corre el test con el código guardado del
+  // snippet, sin guardarlo. Un error al ejecutar es "fail".
+  async testSnippet(snippetId: string, testCase: Partial<TestCase>): Promise<TestCaseResult> {
+    const {input, output} = testCase
+    const response = await this.http.post<{ result: TestCaseResult }>(`/snippets/${snippetId}/tests/run`, {input, output})
+    return response.data.result
   }
 
   // --- Compartir (Permission Service) ---
