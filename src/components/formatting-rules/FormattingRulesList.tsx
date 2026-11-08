@@ -11,6 +11,8 @@ import {
 import {useGetFormatRules, useModifyFormatRules} from "../../utils/queries.tsx";
 import {queryClient} from "../../App.tsx";
 import {Rule} from "../../types/Rule.ts";
+import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
+import {backendErrorMessage} from "../../utils/backendError.ts";
 
 const FormattingRulesList = () => {
   const [rules, setRules] = useState<Rule[] | undefined>([]);
@@ -23,6 +25,12 @@ const FormattingRulesList = () => {
   useEffect(() => {
     setRules(data)
   }, [data]);
+
+  // Avisa si se guardaron, o por qué no (por ejemplo, dos reglas opuestas).
+  const {createSnackbar} = useSnackbarContext()
+  const saveRules = () => mutateAsync(rules ?? [])
+      .then(() => createSnackbar('success', 'Reglas de formateo guardadas'))
+      .catch(error => createSnackbar('error', backendErrorMessage(error)))
 
   const handleValueChange = (rule: Rule, newValue: string | number) => {
     const newRules = rules?.map(r => {
@@ -88,7 +96,7 @@ const FormattingRulesList = () => {
           )
         })}
       </List>
-      <Button disabled={isLoading} variant={"contained"} onClick={() => mutateAsync(rules ?? [])}>Save</Button>
+      <Button disabled={isLoading} variant={"contained"} onClick={saveRules}>Save</Button>
     </Card>
 
   );
