@@ -4,7 +4,10 @@ import {SyntheticEvent, useState} from "react";
 import {AddRounded} from "@mui/icons-material";
 import {useGetTestCases, usePostTestCase, useRemoveTestCase} from "../../utils/queries.tsx";
 import {TabPanel} from "./TabPanel.tsx";
+import {TestCase} from "../../types/TestCase.ts";
 import {queryClient} from "../../App.tsx";
+import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
+import {backendErrorMessage} from "../../utils/backendError.ts";
 
 type TestSnippetModalProps = {
     snippetId: string
@@ -21,6 +24,14 @@ export const TestSnippetModal = ({snippetId, open, onClose}: TestSnippetModalPro
         snippetId,
         onSuccess: () => queryClient.invalidateQueries(['testCases', snippetId])
     });
+
+    // Avisa si el backend rechaza el pedido, por ejemplo un 403 cuando quien
+    // guarda o borra no es el owner.
+    const {createSnackbar} = useSnackbarContext()
+    const showError = (error: unknown) => createSnackbar('error', backendErrorMessage(error))
+    const saveTestCase = (tc: Partial<TestCase>) =>
+        postTestCase(tc).then(() => createSnackbar('success', 'Test guardado')).catch(showError)
+    const deleteTestCase = (id: string) => removeTestCase(id).catch(showError)
 
     const handleChange = (_: SyntheticEvent, newValue: number) => {
         setValue(newValue);
@@ -52,12 +63,12 @@ export const TestSnippetModal = ({snippetId, open, onClose}: TestSnippetModalPro
                 </Tabs>
                 {testCases?.map((testCase, index) => (
                     <TabPanel snippetId={snippetId} index={index} value={value} test={testCase}
-                              setTestCase={(tc) => postTestCase(tc)}
-                              removeTestCase={(i) => removeTestCase(i)}
+                              setTestCase={saveTestCase}
+                              removeTestCase={deleteTestCase}
                     />
                 ))}
                 <TabPanel snippetId={snippetId} index={(testCases?.length ?? 0) + 1} value={value}
-                          setTestCase={(tc) => postTestCase(tc)}
+                          setTestCase={saveTestCase}
                 />
             </Box>
         </ModalWrapper>
