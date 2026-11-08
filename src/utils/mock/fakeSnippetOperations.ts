@@ -1,3 +1,4 @@
+import {SnippetFile} from "../snippet.ts";
 import {SnippetOperations} from '../snippetOperations'
 import {FakeSnippetStore} from './fakeSnippetStore'
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from '../snippet'
@@ -108,6 +109,14 @@ export class FakeSnippetOperations implements SnippetOperations {
   deleteSnippet(id: string): Promise<string> {
     return new Promise(resolve => {
       setTimeout(() => resolve(this.fakeStore.deleteSnippet(id)), DELAY)
+    })
+  }
+
+  downloadSnippet(snippetId: string, formatted: boolean): Promise<SnippetFile> {
+    const snippet = this.fakeStore.getSnippetById(snippetId)
+    return Promise.resolve({
+      filename: `${snippet?.name ?? 'snippet'}${formatted ? '-formateado' : ''}.${snippet?.extension ?? 'ps'}`,
+      content: snippet?.content ?? '',
     })
   }
 

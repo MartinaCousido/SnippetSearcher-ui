@@ -33,6 +33,12 @@ type SnippetStatus = {
   lintViolations?: LintViolation[];
 }
 
+// Un snippet para descargar (US-13).
+export type SnippetFile = {
+  filename: string;
+  content: string;
+}
+
 export type LintViolation = {
   rule: string;
   message: string;

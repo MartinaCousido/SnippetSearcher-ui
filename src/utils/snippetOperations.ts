@@ -1,4 +1,4 @@
-import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet'
+import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, UpdateSnippet} from './snippet'
 import {PaginatedUsers} from "./users.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {TestCaseResult} from "./queries.tsx";
@@ -38,6 +38,9 @@ export interface SnippetOperations {
   testSnippet(snippetId: string, testCase: Partial<TestCase>): Promise<TestCaseResult>
 
   getFileTypes(): Promise<FileType[]>
+
+  // Agregado por Snippet Searcher (US-13): el archivo original o el formateado.
+  downloadSnippet(snippetId: string, formatted: boolean): Promise<SnippetFile>
 
   modifyFormatRule(newRules: Rule[]): Promise<Rule[]>
 
