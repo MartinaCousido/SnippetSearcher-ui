@@ -9,9 +9,15 @@ export default defineConfig(({ mode }) => {
   // Saca el /api: los servicios exponen sus rutas sin ese prefijo.
   const withoutApi = (path: string) => path.replace(/^\/api/, '')
   return {
+    // Reemplaza cada process.env.X de src/utils/constants.ts. Todas se
+    // reemplazan siempre, aunque no estén definidas (quedan en undefined): en
+    // el navegador process no existe. Las credenciales de Auth0 son solo de
+    // Cypress y nunca entran al código de la UI.
     define: {
-      'process.env.FRONTEND_URL': JSON.stringify(env.FRONTEND_URL),
-      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL)
+      'process.env.FRONTEND_URL': env.FRONTEND_URL ? JSON.stringify(env.FRONTEND_URL) : 'undefined',
+      'process.env.BACKEND_URL': env.BACKEND_URL ? JSON.stringify(env.BACKEND_URL) : 'undefined',
+      'process.env.AUTH0_USERNAME': 'undefined',
+      'process.env.AUTH0_PASSWORD': 'undefined'
     },
     plugins: [react()],
     // Reverse proxy de desarrollo: la UI pide todo a /api y Vite le pasa cada

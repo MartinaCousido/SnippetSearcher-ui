@@ -15,7 +15,7 @@
 
 // Import commands.js using ES2015 syntax:
 import './commands'
-import {loginViaAuth0Ui} from "./auth-provider-commands/auth0";
+import {accessToken, hasAuth0Session, loginViaAuth0Ui} from "./auth-provider-commands/auth0";
 
 Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
   const log = Cypress.log({
@@ -32,13 +32,16 @@ Cypress.Commands.add('loginToAuth0', (username: string, password: string) => {
       },
       {
         validate: () => {
-          // Validate presence of access token in localStorage.
-          cy.wrap(localStorage)
-              .invoke('getItem', 'authAccessToken')
-              .should('exist')
+          // La sesión sigue si auth0-react tiene su token en localStorage.
+          cy.wrap(null).then(() => expect(hasAuth0Session(localStorage)).to.eq(true))
         },
       }
   )
   log.snapshot('after')
   log.end()
+})
+
+// Header Authorization con el token del usuario, para cy.request.
+Cypress.Commands.add('authHeaders', () => {
+  return cy.window().then(win => ({Authorization: `Bearer ${accessToken(win.localStorage)}`}))
 })

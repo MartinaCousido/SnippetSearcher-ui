@@ -2,10 +2,11 @@ import {BACKEND_URL} from "../../src/utils/constants";
 
 describe('Add snippet tests', () => {
   beforeEach(() => {
-    // cy.loginToAuth0(
-    //     AUTH0_USERNAME,
-    //     AUTH0_PASSWORD
-    // )
+    // Usuario de prueba de Auth0 (ver Cypress en el README).
+    cy.loginToAuth0(
+        Cypress.env('AUTH0_USERNAME'),
+        Cypress.env('AUTH0_PASSWORD')
+    )
   })
   it('Can add snippets manually', () => {
     cy.visit("/")

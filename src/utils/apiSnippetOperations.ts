@@ -19,11 +19,18 @@ import {BACKEND_URL} from "./constants.ts";
 // Cuando un endpoint está listo, su método pasa a llamar al backend.
 export class ApiSnippetOperations implements SnippetOperations {
   private readonly fake: SnippetOperations = new FakeSnippetOperations()
-  // Cliente HTTP hacia el reverse proxy. Con Auth0, acá se va a sumar el token.
+  // Cliente HTTP hacia el reverse proxy.
   private readonly http = axios.create({baseURL: BACKEND_URL})
 
-  constructor() {
+  // getAccessToken es getAccessTokenSilently de Auth0: devuelve el token
+  // guardado, o pide uno nuevo con el refresh token si venció.
+  constructor(getAccessToken: () => Promise<string>) {
     autoBind(this)
+    // Interceptor: antes de mandar cada pedido, le agrega el token del usuario.
+    this.http.interceptors.request.use(async config => {
+      config.headers.Authorization = `Bearer ${await getAccessToken()}`
+      return config
+    })
   }
 
   // --- Snippets (Snippet Service) ---
@@ -54,14 +61,18 @@ export class ApiSnippetOperations implements SnippetOperations {
     }
   }
 
-  // Sin backend todavía: PUT /snippets/{id}
-  updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet> {
-    return this.fake.updateSnippetById(id, updateSnippet)
+  // PUT /snippets/{id}. Solo el owner. Si el código no es válido, responde 400
+  // con los diagnostics y no cambia nada.
+  async updateSnippetById(id: string, updateSnippet: UpdateSnippet): Promise<Snippet> {
+    const response = await this.http.put<Snippet>(`/snippets/${id}`, updateSnippet)
+    return response.data
   }
 
-  // Sin backend todavía: DELETE /snippets/{id}
-  deleteSnippet(id: string): Promise<string> {
-    return this.fake.deleteSnippet(id)
+  // DELETE /snippets/{id}. Solo el owner. Devuelve el id, como la
+  // implementación falsa.
+  async deleteSnippet(id: string): Promise<string> {
+    await this.http.delete(`/snippets/${id}`)
+    return id
   }
 
   // GET /languages
@@ -121,9 +132,12 @@ export class ApiSnippetOperations implements SnippetOperations {
 
   // --- Compartir (Permission Service) ---
 
-  // Sin backend todavía: POST /permissions/{snippetId}/share y GET /snippets/{snippetId}
-  shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
-    return this.fake.shareSnippet(snippetId, userId)
+  // POST /permissions/{snippetId}/share y después GET /snippets/{snippetId}.
+  // Solo el owner comparte; el invitado queda con permiso de solo lectura.
+  async shareSnippet(snippetId: string, userId: string): Promise<Snippet> {
+    await this.http.post(`/permissions/${snippetId}/share`, {userId})
+    const response = await this.http.get<Snippet>(`/snippets/${snippetId}`)
+    return response.data
   }
 
   // --- Usuarios ---
