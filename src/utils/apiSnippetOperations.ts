@@ -1,5 +1,4 @@
 import {SnippetOperations} from './snippetOperations'
-import {FakeSnippetOperations} from './mock/fakeSnippetOperations'
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet'
 import autoBind from 'auto-bind'
 import axios from 'axios'
@@ -13,12 +12,9 @@ import {BACKEND_URL} from "./constants.ts";
 // Nuestra implementación de SnippetOperations: llama a Snippet Service y a
 // Permission Service a través del reverse proxy (BACKEND_URL).
 // El contrato de cada método está en "Contrato con la UI" de SnippetSearcher.
-//
-// Los métodos cuyo endpoint todavía no existe le pasan el pedido a la
-// implementación falsa de la cátedra (`fake`), así la UI nunca se rompe.
-// Cuando un endpoint está listo, su método pasa a llamar al backend.
+// Todos los métodos llaman al backend: ya no usa la implementación falsa de la
+// cátedra (FakeSnippetOperations).
 export class ApiSnippetOperations implements SnippetOperations {
-  private readonly fake: SnippetOperations = new FakeSnippetOperations()
   // Cliente HTTP hacia el reverse proxy.
   private readonly http = axios.create({baseURL: BACKEND_URL})
 
@@ -81,31 +77,37 @@ export class ApiSnippetOperations implements SnippetOperations {
     return response.data
   }
 
-  // Sin backend todavía: POST /snippets/{id}/format
-  formatSnippet(snippetId: string, snippet: string): Promise<string> {
-    return this.fake.formatSnippet(snippetId, snippet)
+  // POST /snippets/{id}/format: formatea el código del editor con las reglas
+  // del owner, sin guardar. Si el formateador falla, 400 con los diagnostics.
+  async formatSnippet(snippetId: string, snippet: string): Promise<string> {
+    const response = await this.http.post<{ content: string }>(`/snippets/${snippetId}/format`, {content: snippet})
+    return response.data.content
   }
 
   // --- Reglas (Snippet Service) ---
 
-  // Sin backend todavía: GET /rules/format
-  getFormatRules(): Promise<Rule[]> {
-    return this.fake.getFormatRules()
+  // GET /rules/format: las reglas de formateo del usuario (US-11).
+  async getFormatRules(): Promise<Rule[]> {
+    const response = await this.http.get<Rule[]>('/rules/format')
+    return response.data
   }
 
-  // Sin backend todavía: PUT /rules/format
-  modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.fake.modifyFormatRule(newRules)
+  // PUT /rules/format. 400 si activa dos reglas opuestas o un valor no sirve.
+  async modifyFormatRule(newRules: Rule[]): Promise<Rule[]> {
+    const response = await this.http.put<Rule[]>('/rules/format', newRules)
+    return response.data
   }
 
-  // Sin backend todavía: GET /rules/lint
-  getLintingRules(): Promise<Rule[]> {
-    return this.fake.getLintingRules()
+  // GET /rules/lint: las reglas de lint del usuario (US-14).
+  async getLintingRules(): Promise<Rule[]> {
+    const response = await this.http.get<Rule[]>('/rules/lint')
+    return response.data
   }
 
-  // Sin backend todavía: PUT /rules/lint
-  modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
-    return this.fake.modifyLintingRule(newRules)
+  // PUT /rules/lint. 400 si un valor no sirve.
+  async modifyLintingRule(newRules: Rule[]): Promise<Rule[]> {
+    const response = await this.http.put<Rule[]>('/rules/lint', newRules)
+    return response.data
   }
 
   // --- Tests (Snippet Service) ---
