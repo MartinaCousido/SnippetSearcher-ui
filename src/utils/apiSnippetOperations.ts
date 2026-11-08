@@ -1,5 +1,5 @@
 import {SnippetOperations} from './snippetOperations'
-import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet'
+import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, UpdateSnippet} from './snippet'
 import autoBind from 'auto-bind'
 import axios from 'axios'
 import {PaginatedUsers} from "./users.ts";
@@ -84,6 +84,18 @@ export class ApiSnippetOperations implements SnippetOperations {
     return response.data.content
   }
 
+  // GET /snippets/{id}/download?formatted=…: el archivo original o la versión
+  // formateada (US-13). El nombre sale de Content-Disposition. 404 si todavía
+  // no hay versión formateada.
+  async downloadSnippet(snippetId: string, formatted: boolean): Promise<SnippetFile> {
+    const response = await this.http.get<string>(`/snippets/${snippetId}/download`, {
+      params: {formatted},
+      responseType: 'text',
+      transformResponse: data => data,
+    })
+    return {filename: filenameOf(response.headers['content-disposition']), content: response.data}
+  }
+
   // --- Reglas (Snippet Service) ---
 
   // GET /rules/format: las reglas de formateo del usuario (US-11).
@@ -165,4 +177,11 @@ export class ApiSnippetOperations implements SnippetOperations {
     })
     return response.data
   }
+}
+
+// El nombre del archivo de Content-Disposition (filename*=UTF-8''… o filename="…").
+const filenameOf = (header?: string): string => {
+  const encoded = header?.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+  if (encoded) return decodeURIComponent(encoded)
+  return header?.match(/filename="?([^";]+)"?/i)?.[1] ?? 'snippet'
 }
