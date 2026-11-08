@@ -102,7 +102,7 @@ Este repo usa `master` en lugar de `dev`:
 
 Los tests de la cátedra (`cypress/e2e/`) usan la página como lo haría un usuario. Inician sesión en la página real de Auth0, con un usuario de prueba, y corren contra el sistema levantado en local.
 
-1. **Backend:** levantar el sistema completo desde SnippetSearcher (`docker compose -f docker-compose.sistema.yml up --build`, ver [Cómo levantarlo](https://github.com/MartinaCousido/SnippetSearcher#cómo-levantarlo)).
+1. **Backend:** levantar el sistema completo desde SnippetSearcher (`docker compose -f docker-compose.sistema.yml --env-file .env --env-file ../SnippetPrintScript/.env up --build`, ver [Cómo levantarlo](https://github.com/MartinaCousido/SnippetSearcher#cómo-levantarlo)).
 2. **Variables:** en el `.env` de este repo (ver [`.env.example`](.env.example)), además de las de Auth0:
 
    | Variable | Valor |
