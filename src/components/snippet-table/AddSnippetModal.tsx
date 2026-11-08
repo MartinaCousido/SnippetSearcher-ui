@@ -55,13 +55,15 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
         }
     }
 
+    // Cada vez que se abre, arranca con el snippet cargado desde un archivo, o
+    // vacío. Antes quedaba con lo del último snippet creado.
     useEffect(() => {
-        if (defaultSnippet) {
-            setCode(defaultSnippet?.content)
-            setLanguage(defaultSnippet?.language)
-            setSnippetName(defaultSnippet?.name)
+        if (open) {
+            setCode(defaultSnippet?.content ?? "")
+            setLanguage(defaultSnippet?.language ?? "printscript")
+            setSnippetName(defaultSnippet?.name ?? "")
         }
-    }, [defaultSnippet]);
+    }, [open, defaultSnippet]);
 
     return (
         <ModalWrapper open={open} onClose={onClose}>
