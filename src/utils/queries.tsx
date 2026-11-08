@@ -1,4 +1,4 @@
-import {useMutation, UseMutationResult, useQuery} from 'react-query';
+import {useMutation, UseMutationResult, useQuery, useQueryClient} from 'react-query';
 import {CreateSnippet, PaginatedSnippets, Snippet, UpdateSnippet} from './snippet.ts';
 import {SnippetOperations} from "./snippetOperations.ts";
 import {PaginatedUsers} from "./users.ts";
@@ -75,9 +75,12 @@ export const useGetTestCases = (snippetId: string) => {
 
 export const usePostTestCase = (snippetId: string) => {
   const snippetOperations = useSnippetsOperations()
+  const queryClient = useQueryClient()
 
   return useMutation<TestCase, Error, Partial<TestCase>>(
-      (tc) => snippetOperations.postTestCase(snippetId, tc)
+      (tc) => snippetOperations.postTestCase(snippetId, tc),
+      // Vuelve a pedir la lista: así aparece el test nuevo o cambiado.
+      {onSuccess: () => queryClient.invalidateQueries(['testCases', snippetId])}
   );
 };
 
