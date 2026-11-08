@@ -142,8 +142,15 @@ export class ApiSnippetOperations implements SnippetOperations {
 
   // --- Usuarios ---
 
-  // Sigue con datos falsos mientras el módulo User esté en standby.
-  getUserFriends(name?: string, page?: number, pageSize?: number): Promise<PaginatedUsers> {
-    return this.fake.getUserFriends(name, page, pageSize)
+  // GET /users?name=&page=&page_size=: con quién se puede compartir (módulo
+  // User, en Snippet Service). Filtra por el comienzo del email y nunca
+  // incluye a quien pide. name es el email, id el que se manda al compartir.
+  // La UI de la cátedra cuenta las páginas de usuarios desde 1, y el backend
+  // desde 0, como en el listado de snippets.
+  async getUserFriends(name: string = "", page: number = 1, pageSize: number = 10): Promise<PaginatedUsers> {
+    const response = await this.http.get<PaginatedUsers>('/users', {
+      params: {name: name || undefined, page: Math.max(page - 1, 0), page_size: pageSize}
+    })
+    return response.data
   }
 }
