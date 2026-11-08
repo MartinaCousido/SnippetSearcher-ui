@@ -1,12 +1,13 @@
-import {AUTH0_PASSWORD, AUTH0_USERNAME, BACKEND_URL, FRONTEND_URL} from "../../src/utils/constants";
+import {BACKEND_URL, FRONTEND_URL} from "../../src/utils/constants";
 import {CreateSnippet} from "../../src/utils/snippet";
 
 describe('Home', () => {
   beforeEach(() => {
-    // cy.loginToAuth0( TODO DE-Comment when auth0 is ready
-    //     AUTH0_USERNAME,
-    //     AUTH0_PASSWORD
-    // )
+    // Usuario de prueba de Auth0 (ver Cypress en el README).
+    cy.loginToAuth0(
+        Cypress.env('AUTH0_USERNAME'),
+        Cypress.env('AUTH0_PASSWORD')
+    )
   })
   before(() => {
     process.env.FRONTEND_URL = Cypress.env("FRONTEND_URL");
@@ -47,12 +48,14 @@ describe('Home', () => {
       });
     }).as('getSnippets');
 
-    cy.request({
+    // El pedido va directo al backend, sin la UI: lleva el token a mano.
+    cy.authHeaders().then(headers => cy.request({
       method: 'POST',
       url: BACKEND_URL + '/snippets',
+      headers,
       body: snippetData,
       failOnStatusCode: false // Optional: set to true if you want the test to fail on non-2xx status codes
-    }).then((response) => {
+    })).then((response) => {
       expect(response.status).to.eq(200);
 
       expect(response.body.name).to.eq(snippetData.name)
