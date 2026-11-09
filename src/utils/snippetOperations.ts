@@ -1,4 +1,4 @@
-import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, UpdateSnippet} from './snippet'
+import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, SnippetFilters, UpdateSnippet} from './snippet'
 import {PaginatedUsers} from "./users.ts";
 import {TestCase} from "../types/TestCase.ts";
 import {TestCaseResult} from "./queries.tsx";
@@ -9,7 +9,8 @@ import {Rule} from "../types/Rule.ts";
 // interfaz de la cátedra): sin él no se sabe a qué snippet pertenece un test ni
 // con qué lenguaje y reglas formatear. Ver "Contrato con la UI" en SnippetSearcher.
 export interface SnippetOperations {
-  listSnippetDescriptors(page: number,pageSize: number,sippetName?: string): Promise<PaginatedSnippets>
+  // filters es un cambio nuestro (US-5): relación, lenguaje, validez y orden.
+  listSnippetDescriptors(page: number,pageSize: number,sippetName?: string, filters?: SnippetFilters): Promise<PaginatedSnippets>
 
   createSnippet(createSnippet: CreateSnippet): Promise<Snippet>
 
