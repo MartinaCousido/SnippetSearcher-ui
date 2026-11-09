@@ -1,8 +1,11 @@
 import {useState} from "react";
+import {useAuth0} from "@auth0/auth0-react";
+import {useQueryClient} from "react-query";
 import {TestCase} from "../../types/TestCase.ts";
 import {Autocomplete, Box, Button, Chip, TextField, Typography} from "@mui/material";
 import {BugReport, Delete, Save} from "@mui/icons-material";
-import {useTestSnippet} from "../../utils/queries.tsx";
+import {TestCaseResult, useTestSnippet} from "../../utils/queries.tsx";
+import {startLiveExecution} from "../../utils/liveExecution.ts";
 import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
 import {backendErrorMessage} from "../../utils/backendError.ts";
 
@@ -22,6 +25,53 @@ export const TabPanel = ({snippetId, value, index, test: initialTest, setTestCas
     // Si no se puede correr el test (por ejemplo, PrintScript no responde),
     // avisa en lugar de no hacer nada.
     const {createSnackbar} = useSnackbarContext()
+    const {getAccessTokenSilently} = useAuth0()
+    const queryClient = useQueryClient()
+    // Correr el test en vivo (US-9): los outputs aparecen a medida que salen.
+    const [liveOutputs, setLiveOutputs] = useState<string[]>()
+    const [liveResult, setLiveResult] = useState<TestCaseResult>()
+    const [running, setRunning] = useState(false)
+
+    // En vivo se corre el test tal como está guardado. Con cambios sin
+    // guardar, se corre con POST /tests/run, que responde al final.
+    const sameList = (a?: string[], b?: string[]) => JSON.stringify(a ?? []) === JSON.stringify(b ?? [])
+    const savedAsIs = !!initialTest?.id && testData?.id === initialTest.id
+        && sameList(testData?.input, initialTest.input) && sameList(testData?.output, initialTest.output)
+
+    const runTest = async () => {
+        setLiveResult(undefined)
+        setLiveOutputs(undefined)
+        if (!savedAsIs || !testData?.id) {
+            testSnippet(testData ?? {}).catch(error => createSnackbar('error', backendErrorMessage(error)))
+            return
+        }
+        setRunning(true)
+        setLiveOutputs([])
+        try {
+            const token = await getAccessTokenSilently()
+            startLiveExecution(snippetId, token, {
+                onMessage: (message) => {
+                    if (message.type === "output") setLiveOutputs(previous => [...(previous ?? []), message.value])
+                    if (message.type === "error") {
+                        const {rule, range} = message.diagnostic
+                        setLiveOutputs(previous => [...(previous ?? []),
+                            `Error ${rule} (línea ${range.start.line}, columna ${range.start.column})`])
+                    }
+                    if (message.type === "end" && message.result) setLiveResult(message.result)
+                },
+                onClose: (error) => {
+                    setRunning(false)
+                    if (error) createSnackbar('error', error)
+                    // El resultado quedó guardado: se vuelve a pedir la lista.
+                    queryClient.invalidateQueries(['testCases', snippetId])
+                },
+            }, testData.id)
+        } catch {
+            setRunning(false)
+            createSnackbar('error', 'No se pudo conseguir tu sesión: volvé a entrar.')
+        }
+    }
+    const result = liveResult ?? (liveOutputs ? undefined : data)
 
 
     return (
@@ -94,13 +144,21 @@ export const TabPanel = ({snippetId, value, index, test: initialTest, setTestCas
                         <Button disabled={!testData?.name} onClick={() => setTestCase(testData ?? {})} variant={"outlined"} startIcon={<Save/>}>
                             Save
                         </Button>
-                        <Button onClick={() => testSnippet(testData ?? {}).catch(error => createSnackbar('error', backendErrorMessage(error)))} variant={"contained"} startIcon={<BugReport/>}
+                        <Button onClick={runTest} disabled={running} variant={"contained"} startIcon={<BugReport/>}
                                 disableElevation>
                             Test
                         </Button>
-                        {data && (data === "success" ? <Chip label="Pass" color="success"/> :
+                        {result && (result === "success" ? <Chip label="Pass" color="success"/> :
                             <Chip label="Fail" color="error"/>)}
                     </Box>
+                    {liveOutputs && (
+                        <Box display="flex" flexDirection="column" gap={1}>
+                            <Typography fontWeight="bold">Outputs de esta corrida</Typography>
+                            <Box component="pre" sx={{margin: 0, padding: 1, bgcolor: 'black', color: 'white', fontFamily: 'monospace', minHeight: 40}}>
+                                {liveOutputs.join("\n")}{running ? "\n…" : ""}
+                            </Box>
+                        </Box>
+                    )}
                 </Box>
             )}
         </div>

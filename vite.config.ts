@@ -26,7 +26,8 @@ export default defineConfig(({ mode }) => {
     server: {
       proxy: {
         '/api/permissions': { target: permissionService, changeOrigin: true, rewrite: withoutApi },
-        '/api': { target: snippetService, changeOrigin: true, rewrite: withoutApi },
+        // ws: también pasa el WebSocket de la ejecución en vivo (US-9, US-10).
+        '/api': { target: snippetService, changeOrigin: true, rewrite: withoutApi, ws: true },
       },
     },
   }
