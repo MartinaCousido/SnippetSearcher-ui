@@ -17,7 +17,8 @@ import {AddSnippetModal} from "./AddSnippetModal.tsx";
 import {useRef, useState} from "react";
 import {Add, Search} from "@mui/icons-material";
 import {LoadingSnippetRow, SnippetRow} from "./SnippetRow.tsx";
-import {CreateSnippetWithLang, getFileLanguage, Snippet} from "../../utils/snippet.ts";
+import {CreateSnippetWithLang, getFileLanguage, Snippet, SnippetFilters} from "../../utils/snippet.ts";
+import {SnippetFiltersBar} from "./SnippetFiltersBar.tsx";
 import {usePaginationContext} from "../../contexts/paginationContext.tsx";
 import {useSnackbarContext} from "../../contexts/snackbarContext.tsx";
 import {useGetFileTypes} from "../../utils/queries.tsx";
@@ -27,10 +28,12 @@ type SnippetTableProps = {
   snippets?: Snippet[];
   loading: boolean;
   handleSearchSnippet: (snippetName: string) => void;
+  filters: SnippetFilters;
+  handleChangeFilters: (filters: SnippetFilters) => void;
 }
 
 export const SnippetTable = (props: SnippetTableProps) => {
-  const {snippets, handleClickSnippet, loading,handleSearchSnippet} = props;
+  const {snippets, handleClickSnippet, loading,handleSearchSnippet, filters, handleChangeFilters} = props;
   const [addModalOpened, setAddModalOpened] = useState(false);
   const [popoverMenuOpened, setPopoverMenuOpened] = useState(false)
   const [snippet, setSnippet] = useState<CreateSnippetWithLang | undefined>()
@@ -96,6 +99,7 @@ export const SnippetTable = (props: SnippetTableProps) => {
             Add Snippet
           </Button>
         </Box>
+        <SnippetFiltersBar filters={filters} onChange={handleChangeFilters} fileTypes={fileTypes}/>
         <Table size="medium" sx={{borderSpacing: "0 10px", borderCollapse: "separate"}}>
           <TableHead>
             <TableRow sx={{fontWeight: 'bold'}}>
