@@ -1,5 +1,5 @@
 import {SnippetOperations} from './snippetOperations'
-import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, UpdateSnippet} from './snippet'
+import {CreateSnippet, PaginatedSnippets, Snippet, SnippetFile, SnippetFilters, UpdateSnippet} from './snippet'
 import autoBind from 'auto-bind'
 import axios from 'axios'
 import {PaginatedUsers} from "./users.ts";
@@ -31,10 +31,17 @@ export class ApiSnippetOperations implements SnippetOperations {
 
   // --- Snippets (Snippet Service) ---
 
-  // GET /snippets?page=&page_size=&name=. Devuelve los propios y los compartidos.
-  async listSnippetDescriptors(page: number, pageSize: number, snippetName?: string): Promise<PaginatedSnippets> {
+  // GET /snippets?page=&page_size=&name=&relation=&language=&compliance=&sort=&order=
+  // (US-5). Lo que no viene no se manda: el backend usa su valor por defecto.
+  async listSnippetDescriptors(page: number, pageSize: number, snippetName?: string,
+                               filters: SnippetFilters = {}): Promise<PaginatedSnippets> {
     const response = await this.http.get<PaginatedSnippets>('/snippets', {
-      params: {page, page_size: pageSize, name: snippetName || undefined}
+      params: {
+        page, page_size: pageSize, name: snippetName || undefined,
+        relation: filters.relation || undefined, language: filters.language || undefined,
+        compliance: filters.compliance || undefined, sort: filters.sort || undefined,
+        order: filters.order || undefined,
+      }
     })
     return response.data
   }

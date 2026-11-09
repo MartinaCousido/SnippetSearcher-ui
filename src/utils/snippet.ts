@@ -8,6 +8,17 @@ export type ComplianceEnum =
     'compliant'
 
 
+// Filtros y orden del listado (US-5). Ver la fila de listSnippetDescriptors en
+// "Contrato con la UI" de SnippetSearcher. Sin un valor, el backend no filtra
+// por eso; sin sort, ordena por nombre.
+export type SnippetFilters = {
+  relation?: 'all' | 'owner' | 'shared'
+  language?: string
+  compliance?: ComplianceEnum
+  sort?: 'name' | 'language' | 'compliance'
+  order?: 'asc' | 'desc'
+}
+
 export type CreateSnippet = {
   name: string;
   content: string;
