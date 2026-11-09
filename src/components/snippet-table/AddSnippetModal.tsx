@@ -33,10 +33,15 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
     const [language, setLanguage] = useState(defaultSnippet?.language ?? "printscript");
     const [code, setCode] = useState(defaultSnippet?.content ?? "");
     const [snippetName, setSnippetName] = useState(defaultSnippet?.name ?? "")
+    // US-1 y US-3: descripción y versión. Vacía, la versión es la por defecto del lenguaje.
+    const [description, setDescription] = useState("")
+    const [version, setVersion] = useState("")
     const {mutateAsync: createSnippet, isLoading: loadingSnippet} = useCreateSnippet({
         onSuccess: () => queryClient.invalidateQueries('listSnippets')
     })
     const {data: fileTypes} = useGetFileTypes();
+    const versions = fileTypes?.find((f) => f.language === language)?.versions ?? []
+    const defaultVersion = fileTypes?.find((f) => f.language === language)?.defaultVersion
     const {createSnackbar} = useSnackbarContext()
 
     const handleCreateSnippet = async () => {
@@ -44,7 +49,9 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             name: snippetName,
             content: code,
             language: language,
-            extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs"
+            extension: fileTypes?.find((f) => f.language === language)?.extension ?? "prs",
+            description: description || undefined,
+            version: version || undefined,
         }
         try {
             await createSnippet(newSnippet);
@@ -62,6 +69,8 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
             setCode(defaultSnippet?.content ?? "")
             setLanguage(defaultSnippet?.language ?? "printscript")
             setSnippetName(defaultSnippet?.name ?? "")
+            setDescription("")
+            setVersion("")
         }
     }, [open, defaultSnippet]);
 
@@ -103,7 +112,7 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                     id="demo-simple-select"
                     value={language}
                     label="Age"
-                    onChange={(e: SelectChangeEvent<string>) => setLanguage(e.target.value)}
+                    onChange={(e: SelectChangeEvent<string>) => { setLanguage(e.target.value); setVersion("") }}
                     sx={{width: '50%'}}
                 >
                     {
@@ -113,6 +122,18 @@ export const AddSnippetModal = ({open, onClose, defaultSnippet}: {
                         ))
                     }
                 </Select>
+            </Box>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                <InputLabel htmlFor="version">Version</InputLabel>
+                <Select id="version" value={version || defaultVersion || ""} sx={{width: '50%'}}
+                        onChange={(e: SelectChangeEvent<string>) => setVersion(e.target.value)}>
+                    {versions.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+                </Select>
+            </Box>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
+                <InputLabel htmlFor="description">Description</InputLabel>
+                <Input onChange={e => setDescription(e.target.value)} value={description} id="description"
+                       multiline sx={{width: '100%'}}/>
             </Box>
             <InputLabel>Code Snippet</InputLabel>
             <Box width={"100%"} sx={{

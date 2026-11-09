@@ -24,12 +24,21 @@ export type CreateSnippet = {
   content: string;
   language: string;
   extension: string;
+  // US-1 y US-3: el backend los acepta; sin versión usa la por defecto.
+  description?: string;
+  version?: string;
 }
 
 export type CreateSnippetWithLang = CreateSnippet & { language: string }
 
+// US-2 y US-4: el código es obligatorio; los datos que no vienen quedan como
+// estaban.
 export type UpdateSnippet = {
   content: string
+  name?: string
+  description?: string
+  language?: string
+  version?: string
 }
 
 export type Snippet = CreateSnippet & {
