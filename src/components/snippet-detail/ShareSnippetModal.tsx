@@ -17,10 +17,12 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
   const {data, isLoading} = useGetUsers(debouncedName, 1, 5)
   const [selectedUser, setSelectedUser] = useState<User | undefined>()
 
+  // Filtra a medida que se escribe (US-7): busca cuando se deja de tipear un
+  // momento, para no mandar un pedido por cada letra.
   useEffect(() => {
     const getData = setTimeout(() => {
       setDebouncedName(name)
-    }, 3000)
+    }, 300)
     return () => clearTimeout(getData)
   }, [name])
 
@@ -44,7 +46,8 @@ export const ShareSnippetModal = (props: ShareSnippetModalProps) => {
               getOptionLabel={(option) => option.name}
               loading={isLoading}
               value={selectedUser}
-              onInputChange={(_: unknown, newValue: string | null) => newValue && setName(newValue)}
+              // Con el texto vacío vuelve a listar a todos, en lugar de quedarse con el filtro anterior.
+              onInputChange={(_: unknown, newValue: string | null) => setName(newValue ?? "")}
               onChange={(_: unknown, newValue: User | null) => handleSelectUser(newValue)}
           />
           <Box mt={4} display={"flex"} width={"100%"} justifyContent={"flex-end"}>

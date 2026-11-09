@@ -79,7 +79,14 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const {data: snippet, isLoading} = useGetSnippetById(id);
   const {mutate: shareSnippet, isLoading: loadingShare} = useShareSnippet()
   const {mutate: formatSnippet, isLoading: isFormatLoading, data: formatSnippetData} = useFormatSnippet(id)
-  const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({onSuccess: () => queryClient.invalidateQueries(['snippet', id])})
+  // Al guardar, el backend corre todos los tests del snippet (US-16): se vuelven
+  // a pedir el snippet y sus tests, para ver los resultados de la versión nueva.
+  const {mutate: updateSnippet, isLoading: isUpdateSnippetLoading} = useUpdateSnippetById({
+    onSuccess: () => {
+      queryClient.invalidateQueries(['snippet', id])
+      queryClient.invalidateQueries(['testCases', id])
+    }
+  })
   const {createSnackbar} = useSnackbarContext()
 
   // El editor toma el código guardado solo cuando cambia: si cambia otra cosa
