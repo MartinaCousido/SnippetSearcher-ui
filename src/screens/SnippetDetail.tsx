@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import Editor from "react-simple-code-editor";
 import {highlight, languages} from "prismjs";
 import "prismjs/components/prism-clike";
@@ -11,7 +11,9 @@ import {
 } from "../utils/queries.tsx";
 import {useFormatSnippet, useGetSnippetById, useShareSnippet, useSnippetsOperations} from "../utils/queries.tsx";
 import {Bòx} from "../components/snippet-table/SnippetBox.tsx";
-import {BugReport, Delete, Download, PlayArrow, Save, Share, StopRounded} from "@mui/icons-material";
+import {BugReport, Delete, Download, Edit, PlayArrow, Save, Share, StopRounded, UploadFile} from "@mui/icons-material";
+import {EditSnippetModal} from "../components/snippet-detail/EditSnippetModal.tsx";
+import {UpdateSnippet} from "../utils/snippet.ts";
 import {ShareSnippetModal} from "../components/snippet-detail/ShareSnippetModal.tsx";
 import {TestSnippetModal} from "../components/snippet-test/TestSnippetModal.tsx";
 import {Snippet} from "../utils/snippet.ts";
@@ -73,6 +75,9 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
   const [shareModalOppened, setShareModalOppened] = useState(false)
   const [deleteConfirmationModalOpen, setDeleteConfirmationModalOpen] = useState(false)
   const [testModalOpened, setTestModalOpened] = useState(false);
+  // Editar los datos del snippet (US-2 y US-4).
+  const [editModalOpened, setEditModalOpened] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   // Ejecución interactiva (US-10): true mientras corre.
   const [runSnippet, setRunSnippet] = useState(false);
 
@@ -127,7 +132,30 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
             <CircularProgress/>
           </>) : <>
             <Typography variant="h4" fontWeight={"bold"}>{snippet?.name ?? "Snippet"}</Typography>
+            {/* US-6: nombre, descripción, lenguaje y versión. */}
+            <Typography variant="body2" color="text.secondary">
+              {snippet?.language} {snippet?.version}
+            </Typography>
+            {snippet?.description && <Typography mt={1}>{snippet.description}</Typography>}
             <Box display="flex" flexDirection="row" gap="8px" padding="8px">
+              <Tooltip title={"Edit details"}>
+                <IconButton onClick={() => setEditModalOpened(true)}>
+                  <Edit/>
+                </IconButton>
+              </Tooltip>
+              {/* US-2: reemplazar el código con un archivo. Queda en el editor
+                  hasta tocar Save, como un cambio escrito a mano. */}
+              <Tooltip title={"Replace code from file"}>
+                <IconButton onClick={() => fileInput.current?.click()}>
+                  <UploadFile/>
+                </IconButton>
+              </Tooltip>
+              <input hidden type="file" ref={fileInput} data-testid={"replace-file-input"}
+                     onChange={e => {
+                       const file = e.target.files?.[0]
+                       const input = e.target
+                       file?.text().then(text => setCode(text)).finally(() => { input.value = "" })
+                     }}/>
               <Tooltip title={"Share"}>
                 <IconButton onClick={() => setShareModalOppened(true)}>
                   <Share/>
@@ -201,6 +229,12 @@ export const SnippetDetail = (props: SnippetDetailProps) => {
         <ShareSnippetModal loading={loadingShare || isLoading} open={shareModalOppened}
                            onClose={() => setShareModalOppened(false)}
                            onShare={handleShareSnippet}/>
+        <EditSnippetModal open={editModalOpened} onClose={() => setEditModalOpened(false)} snippet={snippet}
+                          loading={isUpdateSnippetLoading}
+                          onSave={(details: Omit<UpdateSnippet, 'content'>) => updateSnippet({id: id, updateSnippet: {...details, content: code}}, {
+                            onSuccess: () => setEditModalOpened(false),
+                            onError: (error) => createSnackbar('error', backendErrorMessage(error)),
+                          })}/>
         <TestSnippetModal snippetId={id} open={testModalOpened} onClose={() => setTestModalOpened(false)}/>
         <DeleteConfirmationModal open={deleteConfirmationModalOpen} onClose={() => setDeleteConfirmationModalOpen(false)} id={snippet?.id ?? ""} setCloseDetails={handleCloseModal} />
       </Box>
